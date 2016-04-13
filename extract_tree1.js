@@ -16,15 +16,15 @@ function FolderTree() {  // extract the folder tree into a speradsheet. with nam
   var folderlisting = 'folder_tree_' + parent; // output file name to be created under root
   
   var ss = SpreadsheetApp.create(folderlisting); // create a new spreadsheet as "folder_tree_accreditation", save it as "ss"
+  // 1000 more rows should be added to the bottom before the script finishes, manually for the time being
   var sheet = ss.getActiveSheet(); // active sheet name into "sheet"
   sheet.appendRow( ['filename', 'foldername', 'link', 'path', 'description'] ); // append the columns names as the first row
-  
-  listFolderContents(parent, sheet, parentroot); // run the recursive function on parent folder
+  listFolderContents(parent, parent, sheet, parentroot); // run the recursive function on parent folder
   
 } // close function
 
 
-function listFolderContents(parent, sheet, parentroot) { // recursive function "list folder contents" on parent folder.
+function listFolderContents(parent, path1, sheet, parentroot) { // recursive function "list folder contents" on parent folder.
   // "sheet" and "parentroot" is carried for recursion
 
   var folders = parent.getFolders(); // get the folders under the parent
@@ -44,6 +44,8 @@ function listFolderContents(parent, sheet, parentroot) { // recursive function "
   var folderID; // ID of folder
   var folderdescript; // description of folder
                       
+  folderpath = path1 // get the path using the second argument
+
   while (folders.hasNext()) { // while1, as long as parent folder has children
 
     folder = folders.next(); // get the next folder
@@ -51,10 +53,12 @@ function listFolderContents(parent, sheet, parentroot) { // recursive function "
     folderlink = folder.getUrl(); // get the url of folder
     folderID = folder.getId(); // get the ID of folder
     folderdescript = folder.getDescription(); // get the description of folder         
-    folderpath = getpath('isfolder', folderID, parentroot); // get the complete of folder by running "getpath" function
+    // folderpath = getpath('isfolder', folderID, parentroot); // get the complete of folder by running "getpath" function
     sheet.appendRow( ['', foldername, folderlink, folderpath, folderdescript] ); // append the folder credentials into the spreadsheet
     
     contents = folder.getFiles(); // get the file names under folder
+
+    path = path1 + "/" + folder // get the path using the second argument
 
     while(contents.hasNext()) { // while2, as long as folder has files
       
@@ -63,20 +67,21 @@ function listFolderContents(parent, sheet, parentroot) { // recursive function "
       link = file.getUrl(); // get the url of the file
       fileID = file.getId(); // get the ID of the file
       descript = file.getDescription(); // get the description of the file
-      path = getpath('isfile', fileID, parentroot); // get the complete path of the file
+      // path = getpath('isfile', fileID, parentroot); // get the complete path of the file
       sheet.appendRow( [name, '', link, path, descript] ); // append the file credentials into the sheet
       
     }  // close while2
     
-    listFolderContents(folder, sheet, parentroot); // recurse the function to get the tree
+    var path2 = path1 + "/" + folder
+    listFolderContents(folder, path2, sheet, parentroot); // recurse the function to get the tree
     
   }  // close while1
 
 }; // close function
 
 
+// deprecated function. the full path is concatenated inside the recursion of "listFolderContents" function. Now the code is much faster
 function getpath(types, ID, parentroot) { // get the full path to the folder or file.
-// This function can be replaced with a superassigned object to hold and append the folder names from each recursion
 
   if (types = 'isfile') { // if1, the object is a file
     var file = DriveApp.getFileById(ID); // initiate the DriveApp and get the file object from file ID. Otherwise, "hasNext" and other methods do not run!
